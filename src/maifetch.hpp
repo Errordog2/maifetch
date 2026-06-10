@@ -37,6 +37,18 @@ struct Image {
   std::string webp;
 };
 
+struct LocalizedText {
+  std::string en;
+  std::string jp;
+};
+
+struct TrackInfo {
+  int id = 0;
+  std::string code;
+  LocalizedText name;
+  LocalizedText artist;
+};
+
 struct Profile {
   int id = 0;
   std::string name;
@@ -48,12 +60,48 @@ struct Profile {
 };
 
 struct Play {
+  int id = 0;
+  int score = 0;
+  int achievement = 0;
   std::string song_name_en;
   std::string difficulty;
   std::string score_formatted;
   std::string achievement_formatted;
   std::string rank;
   std::optional<std::string> full_combo_label;
+};
+
+struct Score {
+  int id = 0;
+  int score = 0;
+  int achievement = 0;
+  std::string song_name_en;
+  std::string difficulty;
+  std::string score_formatted;
+  std::string achievement_formatted;
+  std::string rank;
+  std::optional<std::string> full_combo_label;
+};
+
+struct StatusProbe {
+  std::string status;
+  std::string query_time;
+};
+
+struct WebStatus {
+  std::string api;
+  StatusProbe db_read;
+  StatusProbe db_write;
+};
+
+struct GameStatus {
+  std::string status;
+};
+
+struct Status {
+  WebStatus webui;
+  GameStatus game;
+  std::int64_t last_updated = 0;
 };
 
 class Json {
@@ -93,6 +141,9 @@ std::string help_text();
 
 std::vector<Profile> parse_profiles_response(const std::string& json_text);
 std::vector<Play> parse_plays_response(const std::string& json_text);
+std::vector<Score> parse_scores_response(const std::string& json_text);
+std::vector<TrackInfo> parse_tracks_response(const std::string& json_text);
+Status parse_status_response(const std::string& json_text);
 std::vector<std::string> create_info_lines(const Profile& profile,
                                            const std::vector<Play>& plays,
                                            std::uint32_t score_count,
@@ -106,6 +157,11 @@ public:
   explicit MaiTeaClient(Config config);
   [[nodiscard]] std::vector<Profile> get_profiles() const;
   [[nodiscard]] std::vector<Play> get_recent_plays() const;
+  [[nodiscard]] std::vector<Play> get_all_recent_plays() const;
+  [[nodiscard]] std::vector<Score> get_best_scores() const;
+  [[nodiscard]] std::vector<Score> get_all_best_scores() const;
+  [[nodiscard]] std::vector<TrackInfo> get_tracks() const;
+  [[nodiscard]] Status get_status() const;
 
 private:
   [[nodiscard]] std::string get(const std::string& path) const;

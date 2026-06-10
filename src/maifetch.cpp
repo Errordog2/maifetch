@@ -269,6 +269,18 @@ int int_field(const Json::object& obj, const std::string& key) {
   return static_cast<int>(value.as_number());
 }
 
+LocalizedText localized_text_field(const Json::object& obj, const std::string& key) {
+  LocalizedText text;
+  const auto& value = field(obj, key);
+  if (value.is_null()) {
+    return text;
+  }
+  const auto& text_obj = value.as_object();
+  text.en = string_field(text_obj, "en");
+  text.jp = string_field(text_obj, "jp");
+  return text;
+}
+
 std::string read_file(const std::filesystem::path& file) {
   std::ifstream in(file);
   if (!in) {
@@ -703,6 +715,9 @@ std::vector<Play> parse_plays_response(const std::string& json_text) {
   for (const auto& item : field(root, "data").as_array()) {
     const auto& obj = item.as_object();
     Play play;
+    play.id = int_field(obj, "id");
+    play.score = int_field(obj, "score");
+    play.achievement = int_field(obj, "achievement");
     play.score_formatted = string_field(obj, "score_formatted");
     play.achievement_formatted = string_field(obj, "achievement_formatted");
     play.rank = string_field(obj, "rank");
@@ -727,6 +742,85 @@ std::vector<Play> parse_plays_response(const std::string& json_text) {
     plays.push_back(std::move(play));
   }
   return plays;
+}
+
+std::vector<Score> parse_scores_response(const std::string& json_text) {
+  std::vector<Score> scores;
+  const auto root = parse_json(json_text).as_object();
+  for (const auto& item : field(root, "data").as_array()) {
+    const auto& obj = item.as_object();
+    Score score;
+    score.id = int_field(obj, "id");
+    score.score = int_field(obj, "score");
+    score.achievement = int_field(obj, "achievement");
+    score.score_formatted = string_field(obj, "score_formatted");
+    score.achievement_formatted = string_field(obj, "achievement_formatted");
+    score.rank = string_field(obj, "rank");
+
+    const auto& fc_label = field(obj, "full_combo_label");
+    if (!fc_label.is_null()) {
+      score.full_combo_label = fc_label.as_string();
+    }
+
+    const auto& difficulty = field(obj, "difficulty_level");
+    if (!difficulty.is_null()) {
+      score.difficulty = string_field(difficulty.as_object(), "value");
+    }
+
+    const auto& song = field(obj, "song");
+    if (!song.is_null()) {
+      const auto& name = field(song.as_object(), "name");
+      if (!name.is_null()) {
+        score.song_name_en = string_field(name.as_object(), "en");
+      }
+    }
+    scores.push_back(std::move(score));
+  }
+  return scores;
+}
+
+std::vector<TrackInfo> parse_tracks_response(const std::string& json_text) {
+  std::vector<TrackInfo> tracks;
+  const auto root = parse_json(json_text).as_object();
+  for (const auto& item : field(root, "data").as_array()) {
+    const auto& obj = item.as_object();
+    TrackInfo track;
+    track.id = int_field(obj, "id");
+    track.code = string_field(obj, "code");
+    track.name = localized_text_field(obj, "name");
+    track.artist = localized_text_field(obj, "artist");
+    tracks.push_back(std::move(track));
+  }
+  return tracks;
+}
+
+Status parse_status_response(const std::string& json_text) {
+  const auto root = parse_json(json_text).as_object();
+  Status status;
+  const auto& webui = field(root, "webui");
+  if (!webui.is_null()) {
+    const auto& webui_obj = webui.as_object();
+    status.webui.api = string_field(webui_obj, "api");
+    const auto& db_read = field(webui_obj, "db_read");
+    if (!db_read.is_null()) {
+      status.webui.db_read.status = string_field(db_read.as_object(), "status");
+      status.webui.db_read.query_time = string_field(db_read.as_object(), "query_time");
+    }
+    const auto& db_write = field(webui_obj, "db_write");
+    if (!db_write.is_null()) {
+      status.webui.db_write.status = string_field(db_write.as_object(), "status");
+      status.webui.db_write.query_time = string_field(db_write.as_object(), "query_time");
+    }
+  }
+
+  const auto& game = field(root, "game");
+  if (!game.is_null()) {
+    status.game.status = string_field(game.as_object(), "status");
+  }
+  if (!field(root, "last_updated").is_null()) {
+    status.last_updated = static_cast<std::int64_t>(field(root, "last_updated").as_number());
+  }
+  return status;
 }
 
 std::vector<std::string> create_info_lines(const Profile& profile,
@@ -799,6 +893,26 @@ std::vector<Profile> MaiTeaClient::get_profiles() const {
 
 std::vector<Play> MaiTeaClient::get_recent_plays() const {
   return parse_plays_response(get("/api/v1/plays"));
+}
+
+std::vector<Play> MaiTeaClient::get_all_recent_plays() const {
+  return parse_plays_response(get("/api/v1/plays/all"));
+}
+
+std::vector<Score> MaiTeaClient::get_best_scores() const {
+  return parse_scores_response(get("/api/v1/scores"));
+}
+
+std::vector<Score> MaiTeaClient::get_all_best_scores() const {
+  return parse_scores_response(get("/api/v1/scores/all"));
+}
+
+std::vector<TrackInfo> MaiTeaClient::get_tracks() const {
+  return parse_tracks_response(get("/api/v1/tracks"));
+}
+
+Status MaiTeaClient::get_status() const {
+  return parse_status_response(get("/api/status"));
 }
 
 std::string MaiTeaClient::get(const std::string& path) const {

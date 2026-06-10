@@ -133,6 +133,59 @@ void api_json_test() {
   require(plays.front().full_combo_label.value_or("") == "FC", "full-combo label parsed");
 }
 
+void api_wrapper_json_test() {
+  const auto scores = maifetch::parse_scores_response(R"({
+    "data": [{
+      "id": 101,
+      "achievement": 1005000,
+      "achievement_formatted": "100.5000",
+      "score": 1000000,
+      "score_formatted": "1,000,000",
+      "rank": "SSS+",
+      "full_combo_label": "FC",
+      "difficulty_level": { "value": "expert" },
+      "song": { "name": { "en": "Score Song" } }
+    }]
+  })");
+
+  require(scores.size() == 1, "one score parsed");
+  require(scores.front().id == 101, "score id parsed");
+  require(scores.front().score == 1000000, "score value parsed");
+  require(scores.front().song_name_en == "Score Song", "score song parsed");
+  require(scores.front().difficulty == "expert", "score difficulty parsed");
+
+  const auto tracks = maifetch::parse_tracks_response(R"({
+    "data": [{
+      "id": 9,
+      "code": "track-code",
+      "name": { "en": "Track EN", "jp": "Track JP" },
+      "artist": { "en": "Artist EN", "jp": "Artist JP" }
+    }]
+  })");
+
+  require(tracks.size() == 1, "one track parsed");
+  require(tracks.front().id == 9, "track id parsed");
+  require(tracks.front().code == "track-code", "track code parsed");
+  require(tracks.front().name.en == "Track EN", "track name parsed");
+  require(tracks.front().artist.jp == "Artist JP", "track artist parsed");
+
+  const auto status = maifetch::parse_status_response(R"({
+    "webui": {
+      "api": "ok",
+      "db_read": { "status": "ok", "query_time": "1ms" },
+      "db_write": { "status": "ok", "query_time": "2ms" }
+    },
+    "game": { "status": "online" },
+    "last_updated": 1234567890
+  })");
+
+  require(status.webui.api == "ok", "status webui api parsed");
+  require(status.webui.db_read.query_time == "1ms", "status db read parsed");
+  require(status.webui.db_write.status == "ok", "status db write parsed");
+  require(status.game.status == "online", "game status parsed");
+  require(status.last_updated == 1234567890, "status timestamp parsed");
+}
+
 void formatting_test() {
   maifetch::Profile profile;
   profile.id = 7;
@@ -169,6 +222,7 @@ int main() {
   env_config_file_test();
   config_validation_test();
   api_json_test();
+  api_wrapper_json_test();
   formatting_test();
   std::cout << "maifetch_tests passed\n";
   return 0;
