@@ -30,6 +30,7 @@ sudo apt-get install cmake g++ libcurl4-openssl-dev
 | access token | token for your MaiTea account (required)           | `N/A`                                      | `MAIFETCH_TOKEN` or `MAITEA_TOKEN`       | `--access-token` `-a` `-t` |
 | logo size    | size of the terminal logo, zero disables it        | `20`                                       | `MAIFETCH_LOGO_SIZE` or `MAITEA_LOGO_SIZE`   | `--logo-size` `-l`    |
 | score count  | amount of scores to display, max 12                | `4`                                        | `MAIFETCH_SCORE_COUNT` or `MAITEA_SCORE_COUNT`  | `--score-count` `-s`  |
+| API base URL | MaiTea API base URL, mostly useful for tests       | `https://maitea.app`                       | `MAIFETCH_BASE_URL` or `MAITEA_BASE_URL`       | `--base-url`          |
 | config file  | JSON file to store config variables                | [refer to below](#default-config-location) | `MAIFETCH_CONFIG_FILE` or `MAITEA_CONFIG_FILE` | `--config-file` `-c`  |
 
 Example config:
@@ -38,7 +39,8 @@ Example config:
 {
   "accessToken": "your-token",
   "scoreCount": 4,
-  "logoSize": 20
+  "logoSize": 20,
+  "baseUrl": "https://maitea.app"
 }
 ```
 

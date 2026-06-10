@@ -390,6 +390,9 @@ void apply_config_json(Config& config, const std::filesystem::path& file) {
   if (!field(json, "logoSize").is_null()) {
     config.logo_size = int_field(json, "logoSize");
   }
+  if (!field(json, "baseUrl").is_null()) {
+    config.base_url = string_field(json, "baseUrl");
+  }
 }
 
 void apply_env(Config& config, const EnvReader& env_reader) {
@@ -673,7 +676,7 @@ Options:
   -h, --help                      Show this help text
 
 Configuration priority: CLI > environment > config file > defaults.
-Environment variables: MAIFETCH_TOKEN, MAIFETCH_CONFIG_FILE, MAIFETCH_SCORE_COUNT, MAIFETCH_LOGO_SIZE.
+Environment variables: MAIFETCH_TOKEN, MAIFETCH_CONFIG_FILE, MAIFETCH_SCORE_COUNT, MAIFETCH_LOGO_SIZE, MAIFETCH_BASE_URL.
 The documented MAITEA_* aliases are also supported.
 )";
 }

@@ -40,28 +40,35 @@ void config_priority_test() {
   const auto config_file = write_config(R"({
     "accessToken": "file-token",
     "scoreCount": 2,
-    "logoSize": 8
+    "logoSize": 8,
+    "baseUrl": "https://file.example"
   })");
 
   const auto config = maifetch::load_config(
-      {"--config-file", config_file.string(), "--score-count", "6", "--logo-size=0"},
+      {"--config-file", config_file.string(),
+       "--score-count", "6",
+       "--logo-size=0",
+       "--base-url=https://cli.example"},
       env_from({
           {"MAIFETCH_TOKEN", "env-token"},
           {"MAIFETCH_SCORE_COUNT", "5"},
           {"MAIFETCH_LOGO_SIZE", "12"},
+          {"MAIFETCH_BASE_URL", "https://env.example"},
       }),
       config_file.parent_path());
 
   require(config.access_token == "env-token", "environment overrides config-file token");
   require(config.score_count == 6, "CLI score count overrides environment");
   require(config.logo_size == 0, "CLI logo size can disable logo");
+  require(config.base_url == "https://cli.example", "CLI base URL overrides environment");
   require(config.config_file == config_file, "explicit config file is retained");
 }
 
 void env_config_file_test() {
   const auto config_file = write_config(R"({
     "accessToken": "file-token",
-    "scoreCount": 3
+    "scoreCount": 3,
+    "baseUrl": "https://file.example"
   })");
 
   const auto config = maifetch::load_config(
@@ -73,6 +80,7 @@ void env_config_file_test() {
 
   require(config.access_token == "file-token", "environment config path is loaded");
   require(config.score_count == 3, "environment config values are applied");
+  require(config.base_url == "https://file.example", "config base URL is applied");
   require(config.config_file == config_file, "environment config file is retained");
 }
 
